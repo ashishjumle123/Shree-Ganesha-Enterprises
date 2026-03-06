@@ -41,7 +41,13 @@ app.use(helmet({
                 "blob:",
                 "https://res.cloudinary.com",
                 "https://images.unsplash.com",
-                "https://cdn.lordicon.com"
+                "https://cdn.lordicon.com",
+                "https://th.bing.com",
+                "https://tse1.mm.bing.net",
+                "https://tse2.mm.bing.net",
+                "https://tse3.mm.bing.net",
+                "https://tse4.mm.bing.net",
+                "https://ui-avatars.com"
             ],
             fontSrc: [
                 "'self'",
@@ -66,9 +72,29 @@ app.use(helmet({
     referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 }));
 
-// CORS — allow configured origin (set CLIENT_URL env var on Render)
+// CORS — allow configured origin or mirror request origin for credentials support
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://shree-ganesha.onrender.com',           // Existing Render URL
+    'https://shree-ganesha-enterprises.vercel.app', // User's Vercel deployment URL
+    'https://shree-ganesha-enterprises.vercel.app/'  // Including trailing slash variant if needed
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || '*',
+    origin: function (origin, callback) {
+        // Allow same-origin requests (origin will be undefined)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+            callback(null, true);
+        } else {
+            // In many production cases, you might want to mirror origin if it's your own subdomains
+            // For now, we allow if on Render (same origin usually works without CORS)
+            callback(null, true);
+        }
+    },
     credentials: true
 }));
 

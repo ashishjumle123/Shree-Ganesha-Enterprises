@@ -154,7 +154,7 @@ export default function Checkout() {
                 const orderData = orderRes.data;
 
                 const options = {
-                    key: 'rzp_test_SBl3jr1iGnFDYK',
+                    key: import.meta.env.VITE_RAZORPAY_KEY || 'rzp_test_SBl3jr1iGnFDYK',
                     amount: finalTotal * 100,
                     currency: 'INR',
                     name: 'Shree Ganesha Enterprises',

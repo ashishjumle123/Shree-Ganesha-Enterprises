@@ -11,11 +11,11 @@ let isConnecting = false;  // Guard to prevent concurrent connect calls
 // ─── Connection Options ─────────────────────────────────────────────────────
 const MONGO_OPTIONS = {
     maxPoolSize: 10,     // Max concurrent connections in pool
-    minPoolSize: 2,     // Keep at least 2 connections warm
-    serverSelectionTimeoutMS: 10000,  // Give up selecting a server after 10s
-    socketTimeoutMS: 45000,  // Kill idle sockets after 45s
-    connectTimeoutMS: 10000,  // Abort connection attempt after 10s
-    heartbeatFrequencyMS: 10000,  // Check server health every 10s
+    minPoolSize: 0,      // Serverless/Cloud friendly: don't keep idle connections warm
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    connectTimeoutMS: 10000,
+    heartbeatFrequencyMS: 10000,
     retryWrites: true,
     retryReads: true,
 };
@@ -27,7 +27,7 @@ const getTip = (message = '') => {
     if (message.includes('Authentication failed') || message.includes('bad auth'))
         return '👉 Check Atlas username/password in MONGO_URI inside .env';
     if (message.includes('whitelist') || message.includes('IP'))
-        return '👉 Your IP is not whitelisted. Go to Atlas → Network Access → Add Current IP.';
+        return '👉 Your IP is not whitelisted. Go to Atlas → Network Access → Add 0.0.0.0/0 for Cloud.';
     if (message.includes('timed out') || message.includes('ETIMEDOUT'))
         return '👉 Connection timed out. Ensure cluster is running and IP is whitelisted.';
     return '👉 Check that your MONGO_URI is correct and Atlas cluster is active.';
@@ -35,54 +35,60 @@ const getTip = (message = '') => {
 
 // ─── Core Connect Function ─────────────────────────────────────────────────
 const connectDB = async () => {
-    if (isConnecting) return;  // Prevent concurrent calls
+    // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
+    if (mongoose.connection.readyState >= 1) {
+        console.log('ℹ️  Using existing MongoDB connection.');
+        return mongoose.connection;
+    }
+
+    if (isConnecting) return;
     isConnecting = true;
 
     if (!MONGO_URI) {
-        console.error('❌ MONGO_URI is not defined in .env — server cannot start.');
-        process.exit(1);
+        console.error('❌ FATAL: MONGO_URI is not defined in environment variables.');
+        isConnecting = false;
+        // In production, we don't process.exit(1) here to allow the server to boot
+        // and respond to health checks, even if it can't talk to DB yet.
+        return;
     }
 
     try {
-        console.log(`🔄 Connecting to MongoDB Atlas... (attempt ${retryCount + 1})`);
+        console.log(`🔄 Attempting MongoDB connection... (attempt ${retryCount + 1})`);
         const conn = await mongoose.connect(MONGO_URI, MONGO_OPTIONS);
 
-        retryCount = 0;       // Reset on successful connection
+        retryCount = 0;
         isConnecting = false;
 
         console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
-        console.log(`📦 Database: ${conn.connection.name}`);
+        return conn;
 
     } catch (error) {
         isConnecting = false;
         retryCount++;
 
-        console.error(`❌ MongoDB Connection Failed! (attempt ${retryCount}/${MAX_RETRIES})`);
+        console.error(`❌ MongoDB Connection Error! (attempt ${retryCount}/${MAX_RETRIES})`);
         console.error(`   Reason : ${error.message}`);
         console.error(`   Tip    : ${getTip(error.message)}`);
 
-        if (retryCount >= MAX_RETRIES) {
-            console.error('🚨 Max retry attempts reached. Please check your MongoDB Atlas setup.');
-            console.error('   The server will keep running but database operations will fail.');
-            return; // Don't crash — let the server stay up for health checks
+        if (retryCount < MAX_RETRIES) {
+            console.log(`⏳ Retrying in ${RETRY_DELAY / 1000}s...`);
+            setTimeout(connectDB, RETRY_DELAY);
+        } else {
+            console.error('🚨 Max retry attempts reached. Please check your DB configuration.');
         }
-
-        console.log(`⏳ Retrying in ${RETRY_DELAY / 1000}s...`);
-        setTimeout(connectDB, RETRY_DELAY);
     }
 };
 
 // ─── Connection Event Listeners ────────────────────────────────────────────
+// Note: Mongoose 8+ handles reconnection automatically. 
+// We only log events rather than triggering new connectDB() calls to avoid loops.
+
 mongoose.connection.on('connected', () => {
-    console.log('✅ Mongoose connected to MongoDB Atlas.');
+    console.log('✅ Mongoose connected to MongoDB.');
 });
 
 mongoose.connection.on('disconnected', () => {
-    console.warn('⚠️  MongoDB disconnected. Scheduling automatic reconnect...');
-    // Auto-reconnect after a short delay when Atlas temporarily drops the connection
-    if (!isConnecting) {
-        setTimeout(connectDB, RETRY_DELAY);
-    }
+    console.warn('⚠️  MongoDB disconnected. Mongoose will attempt to reconnect...');
 });
 
 mongoose.connection.on('reconnected', () => {
@@ -91,32 +97,26 @@ mongoose.connection.on('reconnected', () => {
 });
 
 mongoose.connection.on('error', (err) => {
-    // Log but don't crash — Mongoose handles reconnection internally
-    console.error(`❌ MongoDB runtime error: ${err.message}`);
+    console.error(`❌ MongoDB internal error: ${err.message}`);
 });
 
 // ─── Graceful Shutdown ─────────────────────────────────────────────────────
 const gracefulShutdown = async (signal) => {
-    // SIGINT is also sent by nodemon during hot-reloads — detect and skip those
-    // nodemon sets process.env.npm_lifecycle_script; real shutdowns come from user Ctrl+C
-    const isNodemonRestart = !!process.env.NODEMON_RESTART;
-    if (isNodemonRestart) return;
+    // Skip if nodemon is triggering a restart
+    if (process.env.npm_lifecycle_script?.includes('nodemon')) return;
 
-    console.log(`\n🛑 ${signal} received. Closing MongoDB connection gracefully...`);
+    console.log(`\n🛑 ${signal} received. Closing MongoDB connection...`);
     try {
         await mongoose.connection.close();
-        console.log('✅ MongoDB connection closed cleanly. Goodbye.');
-    } catch (err) {
-        console.error('⚠️  Error closing MongoDB connection:', err.message);
-    } finally {
+        console.log('✅ MongoDB connection closed.');
         process.exit(0);
+    } catch (err) {
+        console.error('⚠️  Error during DB shutdown:', err.message);
+        process.exit(1);
     }
 };
 
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM')); // Docker / PM2 stop
-// SIGINT on Windows: only handle when not spawned by nodemon
-if (!process.env.npm_lifecycle_script?.includes('nodemon')) {
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));   // Ctrl+C
-}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 module.exports = connectDB;
