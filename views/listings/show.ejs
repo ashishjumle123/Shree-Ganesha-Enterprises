@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>
+        <%= typeof product !=='undefined' ? product.title : 'Product Details' %> - Shree-Ganesha
+    </title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="bg-light product-details-body">
+    <!-- Navbar Included -->
+    <%- include('../includes/navbar') %>
+
+        <main class="container my-md-4 my-2">
+            <div class="row bg-white bg-md-transparent g-0 rounded-md-3 shadow-sm-md">
+
+                <!-- Breadcrumbs -->
+                <nav aria-label="breadcrumb" class="px-2 pt-2 d-none d-md-block">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Home</a></li>
+                        <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">
+                                <%= typeof product !=='undefined' ? product.category : 'Category' %>
+                            </a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Details</li>
+                    </ol>
+                </nav>
+
+                <div class="col-md-6 mb-2 bg-white text-center p-3 p-md-4 border-bottom border-md-0 position-relative">
+                    <div class="position-absolute top-0 end-0 p-3">
+                        <button class="btn btn-light rounded-circle shadow-sm"><i
+                                class="bi bi-heart text-secondary"></i></button>
+                        <button class="btn btn-light rounded-circle shadow-sm ms-2"><i
+                                class="bi bi-share text-secondary"></i></button>
+                    </div>
+                    <img src="<%= typeof product !== 'undefined' ? product.images[0] : 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?ixlib=rb-4.0.3&w=800&q=80' %>"
+                        class="img-fluid" alt="Product Image" style="max-height: 400px; object-fit: contain;">
+                </div>
+
+                <div class="col-md-6 bg-white p-3 p-md-4">
+                    <h4 class="fw-normal mb-1">
+                        <%= typeof product !=='undefined' ? product.title : 'Samsung 55-inch 4K TV' %>
+                    </h4>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-success rounded-pill me-2"><i class="bi bi-star-fill text-white"></i>
+                            4.5</span>
+                        <span class="text-muted small">8,901 Ratings & 1,432 Reviews</span>
+                        <img src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-cp-zion/img/fa_62673a.png"
+                            height="21" class="ms-auto" alt="Assured">
+                    </div>
+
+                    <div class="price-section my-3 pb-3 border-bottom">
+                        <h2 class="text-dark fw-bold mb-0">₹<%= typeof product !=='undefined' ?
+                                product.price.toLocaleString('en-IN') : '45,000' %>
+                        </h2>
+                        <small class="text-secondary text-decoration-line-through me-2">₹<%= typeof product
+                                !=='undefined' ? (product.price * 1.25).toLocaleString('en-IN') : '56,250' %></small>
+                        <small class="text-success fw-bold">20% off</small>
+                    </div>
+
+                    <!-- Offers -->
+                    <div class="offers-section mb-3">
+                        <h6 class="fw-bold mb-2">Available offers</h6>
+                        <ul class="list-unstyled small">
+                            <li class="mb-2"><i class="bi bi-tag-fill text-success me-2"></i><strong>Bank Offer</strong>
+                                5% Unlimited Cashback on Axis Bank Credit Card</li>
+                            <li class="mb-2"><i class="bi bi-tag-fill text-success me-2"></i><strong>Bank Offer</strong>
+                                10% off on ICICI Bank Credit Card</li>
+                            <li><i class="bi bi-tag-fill text-success me-2"></i><strong>Special Price</strong> Get extra
+                                10% off (price inclusive of cashback/coupon)</li>
+                        </ul>
+                    </div>
+
+                    <div class="specs-box bg-white border border-light p-3 rounded mb-4">
+                        <h6 class="fw-bold border-bottom pb-2">Specifications</h6>
+                        <table class="table table-borderless table-sm small">
+                            <tbody>
+                                <tr>
+                                    <th class="text-muted w-25 fw-normal">Brand</th>
+                                    <td>Standard</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted w-25 fw-normal">Category</th>
+                                    <td>
+                                        <%= typeof product !=='undefined' ? product.category : 'TV' %>
+                                    </td>
+                                </tr>
+                                <% if (typeof product !=='undefined' && product.specifications &&
+                                    product.specifications.length> 0) { %>
+                                    <% product.specifications.forEach(spec=> { %>
+                                        <tr>
+                                            <th class="text-muted w-25 fw-normal">
+                                                <%= spec.key %>
+                                            </th>
+                                            <td>
+                                                <%= spec.value %>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="description-section mb-4">
+                        <h6 class="fw-bold mb-2">Description</h6>
+                        <p class="text-muted small lh-lg">
+                            <%= typeof product !=='undefined' ? product.description
+                                : 'Experience crystal clear picture quality with this Samsung 4K Smart TV. Features include HDR, Tizen OS, and multiple voice assistants.'
+                                %>
+                        </p>
+                    </div>
+
+                    <!-- 4. Sticky 'Buy' Buttons on Product Page -->
+                    <div class="sticky-buy-wrapper bg-white">
+                        <div class="d-flex w-100 p-2 p-md-3">
+                            <button
+                                class="btn btn-outline-secondary btn-lg flex-fill me-2 fs-6 rounded bg-white text-dark w-50"
+                                style="padding: 12px 0;">Add to Cart</button>
+                            <button class="btn btn-warning btn-lg flex-fill fs-6 rounded text-dark w-50"
+                                style="padding: 12px 0;">Buy Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer Included -->
+        <%- include('../includes/footer') %>
+
+            <!-- Bootstrap Bundle JS -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

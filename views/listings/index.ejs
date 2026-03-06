@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shree-Ganesha - Home</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="bg-light">
+    <!-- Navbar Included -->
+    <%- include('../includes/navbar') %>
+
+        <main class="mb-5 mb-md-0">
+            <!-- Google Play / App Banner (Optional, makes it look more native on mobile) -->
+            <div class="d-md-none bg-primary text-white text-center py-2 fw-bold small shadow-sm">
+                Experience the better Shree-Ganesha App!
+            </div>
+
+            <!-- 2. Swipeable Category Bar -->
+            <div class="category-bar-container mt-2 mb-3">
+                <div class="category-bar">
+                    <div class="category-item">
+                        <div class="category-icon shadow-sm"><i class="bi bi-tv"></i></div>
+                        <span>TVs</span>
+                    </div>
+                    <div class="category-item">
+                        <div class="category-icon shadow-sm"><i class="bi bi-snow"></i></div>
+                        <span>Coolers</span>
+                    </div>
+                    <div class="category-item">
+                        <div class="category-icon shadow-sm"><i class="bi bi-box"></i></div>
+                        <span>Fridges</span>
+                    </div>
+                    <div class="category-item">
+                        <div class="category-icon shadow-sm"><i class="bi bi-wind"></i></div>
+                        <span>ACs</span>
+                    </div>
+                    <div class="category-item">
+                        <div class="category-icon shadow-sm"><i class="bi bi-lamp"></i></div>
+                        <span>Furniture</span>
+                    </div>
+                    <div class="category-item">
+                        <div class="category-icon shadow-sm"><i class="bi bi-plug"></i></div>
+                        <span>Washing</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container my-2">
+                <!-- Carousel for Featured Offers -->
+                <div id="offerCarousel" class="carousel slide mb-4 shadow-sm rounded overflow-hidden"
+                    data-bs-ride="carousel">
+                    <div class="carousel-inner" style="max-height: 250px;">
+                        <div class="carousel-item active">
+                            <img src="https://images.unsplash.com/photo-1542282088-fe8426682b8f?w=1200&q=80"
+                                class="d-block w-100 placeholder-wave" alt="Offer 1"
+                                style="object-fit: cover; height: 100%;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Two-Column Product Grid -->
+                <h5 class="fw-bold mb-3 ms-1 text-dark">Suggested for You</h5>
+                <div class="row g-2 g-md-3 px-1">
+                    <% if (typeof products !=='undefined' && products.length> 0) { %>
+                        <% products.forEach(product=> { %>
+                            <!-- col-6 forced on mobile for 2 column layout, col-md-4/col-lg-3 for desktop -->
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <a href="/products/<%= product._id %>" class="text-decoration-none">
+                                    <div class="card product-card h-100 shadow-sm">
+                                        <div class="text-center bg-white">
+                                            <img src="<%= product.images[0] %>" class="card-img-top mx-auto"
+                                                alt="<%= product.title %>">
+                                        </div>
+                                        <div class="card-body bg-light">
+                                            <h6 class="card-title product-title">
+                                                <%= product.title %>
+                                            </h6>
+                                            <div class="d-flex align-items-center mb-1">
+                                                <span class="badge bg-success rounded-pill me-2"><i
+                                                        class="bi bi-star-fill text-white"></i> 4.5</span>
+                                                <span class="text-muted small">(123)</span>
+                                            </div>
+                                            <p class="card-text product-price fw-bold mb-0">₹<%=
+                                                    product.price.toLocaleString('en-IN') %>
+                                            </p>
+                                            <small class="text-secondary text-decoration-line-through">₹<%=
+                                                    (product.price * 1.2).toLocaleString('en-IN') %></small>
+                                            <small class="text-success fw-bold ms-1">20% off</small>
+                                            <p class="text-muted small mt-1 mb-0"><i
+                                                    class="bi bi-truck text-success"></i> Free Delivery</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <% }) %>
+                                <% } else { %>
+                                    <!-- Fallback data -->
+                                    <p class="text-muted">No products available. Did you run the seed script?</p>
+                                    <% } %>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer Included -->
+        <%- include('../includes/footer') %>
+
+            <!-- Bootstrap Bundle JS -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

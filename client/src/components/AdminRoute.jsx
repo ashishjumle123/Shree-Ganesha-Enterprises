@@ -1,0 +1,20 @@
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+export default function AdminRoute() {
+    const { user, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex justify-center items-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2874f0]"></div>
+            </div>
+        );
+    }
+
+    if (!user || user.role !== 'admin') {
+        return <Navigate to="/" replace />;
+    }
+
+    return <Outlet />;
+}
