@@ -1,73 +1,97 @@
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
-
 const compression = require('compression');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
 const connectDB = require('./config/db');
-const Product = require('./models/Product');
 
 const app = express();
 
-// Connect Database
+// ─── Connect Database ──────────────────────────────────────────────────────────
 connectDB();
 
-// View Engine Setup (EJS)
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-// Middleware
+// ─── Core Middleware ───────────────────────────────────────────────────────────
 app.use(compression());
 
+// Helmet — production-safe CSP that allows Cloudinary, Lordicon, Razorpay, Google Fonts
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://checkout.razorpay.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://images.unsplash.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      connectSrc: ["'self'", "https://api.razorpay.com"],
-      frameSrc: ["'self'", "https://checkout.razorpay.com"]
-    }
-  },
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
-  referrerPolicy: { policy: "strict-origin-when-cross-origin" }
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://checkout.razorpay.com",
+                "https://cdn.lordicon.com"
+            ],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://fonts.googleapis.com"
+            ],
+            imgSrc: [
+                "'self'",
+                "data:",
+                "blob:",
+                "https://res.cloudinary.com",
+                "https://images.unsplash.com",
+                "https://cdn.lordicon.com"
+            ],
+            fontSrc: [
+                "'self'",
+                "https://fonts.gstatic.com",
+                "data:"
+            ],
+            connectSrc: [
+                "'self'",
+                "https://api.razorpay.com",
+                "https://cdn.lordicon.com",
+                "https://*.mongodb.net"
+            ],
+            frameSrc: [
+                "'self'",
+                "https://checkout.razorpay.com"
+            ],
+            workerSrc: ["'self'", "blob:"]
+        }
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 }));
 
+// CORS — allow configured origin (set CLIENT_URL env var on Render)
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
-  credentials: true
+    origin: process.env.CLIENT_URL || '*',
+    credentials: true
 }));
 
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-// Session Configuration
+// Session (MongoDB-backed)
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'fallback_secret',
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI,
-    ttl: 60 * 60 * 24,
-    autoRemove: 'native'
-  }),
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24
-  }
+    secret: process.env.SESSION_SECRET || 'fallback_secret',
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI,
+        ttl: 60 * 60 * 24,
+        autoRemove: 'native'
+    }),
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24
+    }
 }));
 
-// API Routes
+// ─── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./server/routes/authRoutes'));
 app.use('/api/users', require('./server/routes/userRoutes'));
 app.use('/api/cart', require('./server/routes/cartRoutes'));
@@ -78,50 +102,34 @@ app.use('/api/upload', require('./server/routes/uploadRoutes'));
 app.use('/api/contact', require('./server/routes/contactRoutes'));
 app.use('/api/banners', require('./server/routes/bannerRoutes'));
 
-// Home Page
-app.get('/', async (req, res) => {
-  try {
-    const products = await Product.find({});
-    res.render('listings/index', { products });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching products");
-  }
+// ─── Serve React Frontend (Vite Build) ────────────────────────────────────────
+// Must come AFTER all API routes so /api/* is never intercepted by static serving
+const clientDistPath = path.join(__dirname, 'client', 'dist');
+app.use(express.static(clientDistPath));
+
+// SPA fallback — Express 5 compatible (no wildcard, use middleware function)
+// This catches all non-API requests and returns index.html so React Router works
+app.use((req, res, next) => {
+    // Only serve index.html for non-API routes
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
-// Product Detail Page
-app.get('/products/:id', async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).send('Product not found');
-
-    res.render('listings/show', { product });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching product details");
-  }
-});
-
-// Serve React Frontend (Vite build)
-app.use(express.static(path.join(__dirname, "client/dist")));
-
-app.get("/*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client/dist/index.html"));
-});
-
-
-// Global Error Handler
+// ─── Global Error Handler ─────────────────────────────────────────────────────
+// Must have exactly 4 params (err, req, res, next) — Express uses this to detect error handlers
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({
-    success: false,
-    message: err.message || "Internal Server Error"
-  });
+    console.error('Unhandled Error:', err.message || err);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error'
+    });
 });
 
-// Start Server
-const PORT = process.env.PORT || 5000;
+// ─── Start Server ──────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
