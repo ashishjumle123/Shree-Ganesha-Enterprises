@@ -17,6 +17,12 @@ connectDB();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+const PORT = process.env.PORT || 5000
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
+
 // Middleware
 const compression = require('compression');
 const helmet = require('helmet');
@@ -126,3 +132,13 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
     console.log(`🚀 Server is running on http://localhost:${port}`); // node restart triggered
 });
+
+import path from "path"
+
+const __dirname = path.resolve()
+
+app.use(express.static(path.join(__dirname, "client/dist")))
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client", "dist", "index.html"))
+})
