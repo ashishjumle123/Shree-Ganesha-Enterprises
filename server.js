@@ -133,12 +133,12 @@ app.listen(port, () => {
     console.log(`🚀 Server is running on http://localhost:${port}`); // node restart triggered
 });
 
-import path from "path"
+import path from "path";
 
-const __dirname = path.resolve()
+const __dirname = path.resolve();
 
-app.use(express.static(path.join(__dirname, "client/dist")))
+app.use(express.static(path.join(__dirname, "client/dist")));
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client", "dist", "index.html"))
-})
+  res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
+});
