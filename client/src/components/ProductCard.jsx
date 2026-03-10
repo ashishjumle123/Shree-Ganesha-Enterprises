@@ -47,9 +47,9 @@ export default function ProductCard({ product }) {
                     </span>
 
                     {/* Simplified Rating */}
-                    {product.rating > 0 && (
+                    {product.ratingsAverage > 0 && (
                         <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded text-[11px] font-bold text-yellow-700">
-                            {parseFloat(product.rating.toFixed(1))} <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                            {product.ratingsAverage} <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
                         </div>
                     )}
                 </div>

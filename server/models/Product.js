@@ -68,7 +68,7 @@ const productSchema = new mongoose.Schema({
         title: { type: String },
         value: { type: String }
     }],
-    reviews: [reviewSchema],
+    reviews: [reviewSchema], // Keeping for backward compatibility
     rating: {
         type: Number,
         required: true,
@@ -78,7 +78,17 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: true,
         default: 0
+    },
+    ratingsAverage: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+    ratingsCount: {
+        type: Number,
+        default: 0
     }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);

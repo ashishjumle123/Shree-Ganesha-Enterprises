@@ -1,4 +1,4 @@
-const Product = require('../../models/Product');
+const Product = require('../models/Product');
 const { productCreateSchema } = require('../validation/productValidation');
 const redisClient = require('../../config/redis');
 
@@ -31,7 +31,7 @@ const getProducts = async (req, res) => {
 
         if (category && category !== 'All Categories') {
             const categoryArray = category.split(',').map(c => c.trim());
-            query.category = { $in: categoryArray };
+            query.category = { $in: categoryArray.map(c => new RegExp(`^${c}$`, 'i')) };
         }
 
         if (brand && brand !== 'Select Brand') {

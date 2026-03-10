@@ -7,4 +7,4 @@ const bannerSchema = new mongoose.Schema({
     isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Banner', bannerSchema);
+module.exports = mongoose.models.Banner || mongoose.model('Banner', bannerSchema);

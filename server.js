@@ -127,6 +127,8 @@ app.use('/api/products', require('./server/routes/productRoutes'));
 app.use('/api/upload', require('./server/routes/uploadRoutes'));
 app.use('/api/contact', require('./server/routes/contactRoutes'));
 app.use('/api/banners', require('./server/routes/bannerRoutes'));
+app.use('/api/categories', require('./server/routes/categoryRoutes'));
+app.use('/api/reviews', require('./server/routes/reviewRoutes'));
 
 // ─── Serve React Frontend (Vite Build) ────────────────────────────────────────
 // Must come AFTER all API routes so /api/* is never intercepted by static serving

@@ -1,24 +1,15 @@
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
-
-const categories = [
-    { name: "AC", image: "https://tse4.mm.bing.net/th/id/OIP.U5Kz7N59I3v67vS6V1u3AHaHa?pid=ImgDet&rs=1", fallback: "AC", route: "/category/AC", type: "Electronics" },
-    { name: "Televisions", image: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", fallback: "TV", route: "/category/TV", type: "Electronics" },
-    { name: "Air Coolers", image: "https://images.unsplash.com/photo-1618218168354-e75c2e173eec?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", fallback: "Co", route: "/category/Air Coolers", type: "Electronics" },
-    { name: "Refrigerators", image: "https://tse4.mm.bing.net/th/id/OIP.DWeH9qsyl3B3xdSbmML_ZQHaE8?rs=1&pid=ImgDetMain&o=7&rm=3", fallback: "Re", route: "/category/Refrigerators", type: "Electronics" },
-    { name: "Sofa", image: "https://th.bing.com/th/id/OIP.J83SxVi9L12fQX6PmaVcvwHaE4?w=274&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3", fallback: "So", route: "/category/Sofa", type: "Furniture" },
-    { name: "Bed", image: "https://images.unsplash.com/photo-1505693419148-4030a90441c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", fallback: "Be", route: "/category/Bed", type: "Furniture" },
-    { name: "Ceiling Fan", image: "https://th.bing.com/th/id/OIP.bivmvb3nB0d9PWAdYZfw2gHaHa?w=203&h=203&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3", fallback: "CF", route: "/category/Ceiling Fan", type: "Furniture" },
-    { name: "Almirah", image: "https://th.bing.com/th/id/OIP.jBxoAro1xYPz7m4NKScPnwHaHa?w=192&h=192&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3", fallback: "Al", route: "/category/Almirah", type: "Furniture" },
-    { name: "Washing Machine", image: "https://th.bing.com/th/id/OIP.i8-eNpg4fCG6CzTqkwPycwHaE8?w=296&h=197&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3", fallback: "WM", route: "/category/Washing Machine", type: "Furniture" },
-    { name: "Small Appliances", image: "https://th.bing.com/th?q=Small+Electronic+Drum+Set&w=120&h=120&c=1&rs=1&qlt=70&o=7&cb=1&dpr=1.3&pid=InlineBlock&rm=3&mkt=en-IN&cc=IN&setlang=en&adlt=moderate&t=1&mw=247", fallback: "SA", route: "/category/Small Appliances", type: "Electronics" },
-];
+import axios from 'axios';
+import BASE_URL from '../api';
 
 export default function CategoryBar() {
     const scrollRef = useRef(null);
     const [showLeftArrow, setShowLeftArrow] = useState(false);
     const [showRightArrow, setShowRightArrow] = useState(true);
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     const checkScroll = () => {
@@ -29,6 +20,23 @@ export default function CategoryBar() {
     };
 
     useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                setLoading(true);
+                const { data } = await axios.get(`${BASE_URL}/api/categories`);
+                if (data && data.length > 0) {
+                    setCategories(data);
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
         checkScroll();
         window.addEventListener('resize', checkScroll);
         const timer = setTimeout(checkScroll, 500);
@@ -36,7 +44,7 @@ export default function CategoryBar() {
             window.removeEventListener('resize', checkScroll);
             clearTimeout(timer);
         };
-    }, []);
+    }, [categories]);
 
     const scroll = (direction) => {
         if (scrollRef.current) {
@@ -45,6 +53,23 @@ export default function CategoryBar() {
             setTimeout(checkScroll, 500);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="bg-white shadow-sm border-b border-gray-100 mb-2 w-full">
+                <div className="max-w-[1400px] mx-auto px-4 py-3 flex gap-4 overflow-hidden">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <div key={i} className="flex items-center gap-2 shrink-0 animate-pulse">
+                            <div className="w-9 h-9 rounded-full bg-gray-200"></div>
+                            <div className="w-16 h-4 bg-gray-100 rounded"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (categories.length === 0) return null;
 
     return (
         <div className="bg-white shadow-sm border-b border-gray-100 mb-2 relative group w-full">

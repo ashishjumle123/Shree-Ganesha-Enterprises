@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Product = require('./models/Product');
+const Product = require('./server/models/Product');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/shree_ganesha';
 

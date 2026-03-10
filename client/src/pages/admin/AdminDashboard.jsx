@@ -1,9 +1,10 @@
 ﻿import { useState, useEffect } from 'react';
 import BASE_URL from '../../api';
-import { LayoutDashboard, Package, ShoppingBag, Menu, X, TrendingUp, IndianRupee, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Menu, X, TrendingUp, IndianRupee, Clock, CheckCircle, AlertCircle, Layers } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import ManageProducts from './ManageProducts';
 import ManageOrders from './ManageOrders';
+import ManageCategories from './ManageCategories';
 import AdminOrderDetail from './AdminOrderDetail';
 
 function OverviewDashboard({ onViewOrder }) {
@@ -168,6 +169,7 @@ export default function AdminDashboard() {
     const navItems = [
         { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
         { id: 'orders', label: 'Manage Orders', icon: ShoppingBag },
+        { id: 'categories', label: 'Manage Categories', icon: Layers },
         { id: 'products', label: 'Manage Products', icon: Package },
     ];
 
@@ -177,6 +179,7 @@ export default function AdminDashboard() {
     const renderContent = () => {
         switch (activeTab) {
             case 'products': return <ManageProducts />;
+            case 'categories': return <ManageCategories />;
             case 'orders': return <ManageOrders onViewOrder={handleViewOrder} />;
             case 'order-detail': return <AdminOrderDetail orderId={viewingOrderId} onBack={handleBackFromDetail} />;
             case 'overview':
@@ -242,7 +245,8 @@ export default function AdminDashboard() {
                             {activeTab === 'overview' ? 'Live overview of your store performance'
                                 : activeTab === 'orders' ? 'View and manage all customer orders'
                                     : activeTab === 'order-detail' ? `Detailed view of order #${viewingOrderId?.slice(-8)}`
-                                        : 'Manage your product catalog'}
+                                        : activeTab === 'categories' ? 'Manage product categories dynamically'
+                                            : 'Manage your product catalog'}
                         </p>
                     </div>
                     {renderContent()}

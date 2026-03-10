@@ -1,6 +1,7 @@
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Cart() {
     const navigate = useNavigate();
@@ -107,8 +108,12 @@ export default function Cart() {
                             <span>₹{cartTotal.toLocaleString('en-IN')}</span>
                         </div>
                     </div>
-                    <button onClick={() => navigate('/checkout')} className="w-full bg-[#fb641b] text-white py-3 rounded-sm shadow mt-6 font-medium text-base hover:bg-[#e05615] transition-colors">
-                        PLACE ORDER
+                    <button
+                        onClick={() => toast('Checkout is currently unavailable.', { icon: '🔒' })}
+                        disabled={true}
+                        className="w-full bg-gray-400 cursor-not-allowed text-white py-3 rounded-sm shadow mt-6 font-medium text-base transition-colors"
+                    >
+                        PLACE ORDER (LOCKED)
                     </button>
                 </div>
             </div>
@@ -120,8 +125,12 @@ export default function Cart() {
                         <span className="text-xs text-gray-500">Total Price</span>
                         <span className="text-lg font-bold text-gray-900">₹{cartTotal.toLocaleString('en-IN')}</span>
                     </div>
-                    <button onClick={() => navigate('/checkout')} className="bg-[#fb641b] rounded text-white font-medium py-2.5 px-8 flex items-center justify-center hover:bg-[#e05615] transition-colors shadow-sm">
-                        Proceed
+                    <button
+                        onClick={() => toast('Checkout is currently unavailable.', { icon: '🔒' })}
+                        disabled={true}
+                        className="bg-gray-400 cursor-not-allowed rounded text-white font-medium py-2.5 px-8 flex items-center justify-center transition-colors shadow-sm"
+                    >
+                        Proceed (LOCKED)
                     </button>
                 </div>
             </div>

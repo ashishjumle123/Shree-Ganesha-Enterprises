@@ -44,21 +44,21 @@ export default function ManageProducts() {
     const [uploading, setUploading] = useState(false);
     const [specifications, setSpecifications] = useState([{ title: '', value: '' }]);
 
-    const categories = [
-        { label: 'TVs', value: 'TV' },
-        { label: 'Refrigerators', value: 'Fridge' },
-        { label: 'Coolers', value: 'Cooler' },
-        { label: 'ACs', value: 'AC' },
-        { label: 'Washing Machines', value: 'Washing Machine' },
-        { label: 'Furniture', value: 'Furniture' },
-        { label: 'Home Theatre', value: 'Home Theatre' },
-        { label: 'Dining', value: 'Dining' },
-        { label: 'Table Fan', value: 'Table Fan' },
-        { label: 'Ceiling Fan', value: 'Ceiling Fan' },
-        { label: 'Almirah', value: 'Almirah' }
-    ];
+    const [categories, setCategories] = useState([]);
 
     useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const { data } = await axios.get(`${BASE_URL}/api/categories`);
+                setCategories(data);
+                if (data.length > 0 && !editingId) {
+                    setFormData(prev => ({ ...prev, category: data[0].name }));
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        };
+        fetchCategories();
         fetchProducts();
     }, []);
 
@@ -268,7 +268,7 @@ export default function ManageProducts() {
                             <label className="block text-sm text-gray-700 mb-1">Category</label>
                             <select name="category" value={formData.category} onChange={handleInputChange} className="w-full border rounded p-2 outline-none">
                                 {categories.map(cat => (
-                                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                                    <option key={cat._id} value={cat.name}>{cat.name}</option>
                                 ))}
                             </select>
                         </div>

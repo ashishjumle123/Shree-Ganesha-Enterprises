@@ -1,5 +1,5 @@
 const Order = require('../models/Order');
-const Product = require('../../models/Product'); // Fixing depth issues if Product is nested differently or we refer to root folder
+const Product = require('../models/Product');
 const sendEmail = require('../utils/sendEmail');
 
 const buildOrderSummaryHtml = (orderItems, deliveryAddress, totalPrice, orderId) => {
