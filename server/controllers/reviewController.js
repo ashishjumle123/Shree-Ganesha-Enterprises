@@ -55,13 +55,13 @@ const createReview = async (req, res) => {
         // 2. Verified Purchase Check
         const order = await Order.findOne({
             user: req.user._id,
-            orderStatus: 'Delivered',
+            orderStatus: { $ne: 'Cancelled' },
             'orderItems.product': productId
         });
 
         if (!order) {
             return res.status(403).json({
-                message: "Only customers who purchased this product and had it delivered can submit a review."
+                message: "Only customers who purchased this product can submit a review."
             });
         }
 
@@ -154,10 +154,10 @@ const checkReviewEligibility = async (req, res) => {
             return res.json({ canReview: false, message: 'You have already reviewed this product.' });
         }
 
-        // 2. Check if purchased and delivered
+        // 2. Check if purchased and not cancelled
         const order = await Order.findOne({
             user: req.user._id,
-            orderStatus: 'Delivered',
+            orderStatus: { $ne: 'Cancelled' },
             'orderItems.product': productId
         });
 
