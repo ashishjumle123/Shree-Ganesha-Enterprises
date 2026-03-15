@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import BASE_URL from '../api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import ReviewForm from '../components/ReviewForm';
 import ReviewList from '../components/ReviewList';
+import EditProductModal from '../components/admin/EditProductModal';
 
 export default function ProductDetails() {
     const { id } = useParams();
@@ -25,6 +26,9 @@ export default function ProductDetails() {
     const [canReview, setCanReview] = useState(false);
     const [canReviewMessage, setCanReviewMessage] = useState('');
     const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
+
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [productRefreshTrigger, setProductRefreshTrigger] = useState(0);
 
     // Scroll automatically to top on route change
     useEffect(() => {
@@ -82,11 +86,18 @@ export default function ProductDetails() {
 
         fetchProduct();
         checkReviewEligibility();
-    }, [id, navigate, user, token, reviewRefreshTrigger]);
+    }, [id, navigate, user, token, reviewRefreshTrigger, productRefreshTrigger]);
 
     const handleAddToCart = () => {
+        if (!user) {
+            toast.error('Please login to add items to your cart');
+            navigate('/login?redirect=/cart');
+            return;
+        }
+
         if (product) {
             addToCart(product);
+            toast.success('Item added to cart!');
         }
     };
 
@@ -120,8 +131,7 @@ export default function ProductDetails() {
     };
 
     const handleEditProduct = () => {
-        toast('Please use the Admin Dashboard to edit products.', { icon: 'ℹ️' });
-        navigate('/admin');
+        setIsEditModalOpen(true);
     };
 
     if (loading) {
@@ -200,7 +210,7 @@ export default function ProductDetails() {
                                     onClick={handleAddToCart}
                                     className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded shadow text-lg flex items-center justify-center gap-2 transition transform active:scale-95"
                                 >
-                                    <ShoppingCart className="w-5 h-5" /> ADD TO CART
+                                    <ShoppingCart className="w-5 h-5" /> {user ? 'ADD TO CART' : 'LOGIN TO BUY'}
                                 </button>
                                 <button
                                     onClick={handleBuyNow}
@@ -435,7 +445,7 @@ export default function ProductDetails() {
                             onClick={handleAddToCart}
                             className="flex-1 bg-white text-gray-800 font-bold py-3.5 px-2 flex items-center justify-center gap-1 border-r border-gray-200"
                         >
-                            ADD TO CART
+                            {user ? 'ADD TO CART' : 'LOGIN TO BUY'}
                         </button>
                         <button
                             onClick={handleBuyNow}
@@ -447,6 +457,13 @@ export default function ProductDetails() {
                     </>
                 )}
             </div>
+
+            <EditProductModal 
+                isOpen={isEditModalOpen} 
+                onClose={() => setIsEditModalOpen(false)} 
+                product={product} 
+                onUpdateSuccess={() => setProductRefreshTrigger(prev => prev + 1)} 
+            />
         </div>
     );
 }

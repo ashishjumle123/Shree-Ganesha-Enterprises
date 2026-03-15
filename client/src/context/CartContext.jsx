@@ -101,61 +101,47 @@ export const CartProvider = ({ children }) => {
         }
     }, [user, token]);
 
-    // ─── ADD TO CART ──────────────────────────────────────────────────────────
-
     const addToCart = async (product) => {
-        if (user && token) {
-            // ── Logged in: optimistic UI then sync to DB
-            setCartItems(prev => {
-                const existing = prev.find(i => i._id === product._id);
-                if (existing) {
-                    return prev.map(i =>
-                        i._id === product._id ? { ...i, quantity: i.quantity + 1 } : i
-                    );
-                }
-                return [...prev, { ...product, quantity: 1 }];
-            });
+        if (!user || !token) {
+            toast.error('Please login to add items to your cart');
+            // Hard redirect from context to force UI shift
+            window.location.href = '/login?redirect=/cart';
+            return;
+        }
 
-            try {
-                const res = await fetch(`${BASE_URL}/api/cart/add`, {
-                    method: 'POST',
-                    headers: authHeaders(),
-                    body: JSON.stringify({ productId: product._id, quantity: 1 })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    const normalized = data.map(item => ({
-                        ...item.product,
-                        quantity: item.quantity
-                    }));
-                    setCartItems(normalized);
-                    toast.success(`${product.title} added to cart`);
-                } else {
-                    // Rollback on failure
-                    await fetchCart();
-                    toast.error('Failed to add to cart');
-                }
-            } catch (err) {
+        // ── Logged in: optimistic UI then sync to DB
+        setCartItems(prev => {
+            const existing = prev.find(i => i._id === product._id);
+            if (existing) {
+                return prev.map(i =>
+                    i._id === product._id ? { ...i, quantity: i.quantity + 1 } : i
+                );
+            }
+            return [...prev, { ...product, quantity: 1 }];
+        });
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/cart/add`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ productId: product._id, quantity: 1 })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const normalized = data.map(item => ({
+                    ...item.product,
+                    quantity: item.quantity
+                }));
+                setCartItems(normalized);
+                toast.success(`${product.title} added to cart`);
+            } else {
+                // Rollback on failure
                 await fetchCart();
                 toast.error('Failed to add to cart');
             }
-        } else {
-            // ── Guest: localStorage only
-            setCartItems(prev => {
-                const existing = prev.find(i => i._id === product._id);
-                let updated;
-                if (existing) {
-                    toast.success(`Increased ${product.title} quantity`);
-                    updated = prev.map(i =>
-                        i._id === product._id ? { ...i, quantity: i.quantity + 1 } : i
-                    );
-                } else {
-                    toast.success(`${product.title} added to cart`);
-                    updated = [...prev, { ...product, quantity: 1 }];
-                }
-                saveGuestCart(updated);
-                return updated;
-            });
+        } catch (err) {
+            await fetchCart();
+            toast.error('Failed to add to cart');
         }
     };
 

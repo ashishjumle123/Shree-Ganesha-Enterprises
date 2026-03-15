@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import BASE_URL from '../../api';
 import { LayoutDashboard, Package, ShoppingBag, Menu, X, TrendingUp, IndianRupee, Clock, CheckCircle, AlertCircle, Layers } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -77,13 +77,13 @@ function OverviewDashboard({ onViewOrder }) {
                 {cards.map((c, i) => {
                     const Icon = c.icon;
                     return (
-                        <div key={i} className={`bg-white rounded-xl shadow-sm border-l-4 ${c.color} p-5 flex items-center gap-4`}>
+                        <div key={i} className={`bg-white rounded-xl shadow-sm border-l-4 ${c.color} p-4 sm:p-5 flex items-center gap-4 min-w-0`}>
                             <div className={`w-12 h-12 rounded-full ${c.bg} flex items-center justify-center flex-shrink-0`}>
                                 <Icon className={`w-6 h-6 ${c.iconColor}`} />
                             </div>
-                            <div>
-                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{c.label}</p>
-                                <p className="text-2xl font-bold text-gray-800 mt-0.5">{c.value}</p>
+                            <div className="overflow-hidden w-full">
+                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide truncate">{c.label}</p>
+                                <p className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mt-0.5 truncate">{c.value}</p>
                             </div>
                         </div>
                     );
